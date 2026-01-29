@@ -1,0 +1,12 @@
+{
+  "name": "daily-insight",
+  "version": "1.0.0",
+  "description": "Daily news digest: crawl, summarize, save to Google Sheets, send via Telegram",
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "googleapis": "^144.0.0"
+  }
+}
