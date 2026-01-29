@@ -2,10 +2,11 @@
 
 A Vercel-hosted workflow that **every day**:
 
-1. **Crawls** news by category (world, Singapore/SEA, IT, Finance, Politics, Government Policy, Energy, Science, Rare Earth & commodities).
+1. **Crawls** news: **Top 20 world** and **Top 20 Asia & SEA**.
 2. **Summarizes** headlines (optional AI summarization via OpenAI; otherwise uses article description).
-3. **Appends** rows to a **Google Sheet** by date (Date | Category | Title | Summary | Link | Source) so you can revisit later.
-4. **Sends** the full digest to you via **Telegram**.
+3. **Translates** to Mandarin (requires OpenAI); displays **English first, then 中文** in Telegram and Sheet.
+4. **Appends** rows to a **Google Sheet** by date (Date | Category | Title | Summary | Link | Source) so you can revisit later.
+5. **Sends** the full digest to you via **Telegram**.
 
 Cron runs **once per day** (default: 6:00 UTC; adjust in `vercel.json`). You can also trigger the job manually by calling `GET /api/cron-daily-news` (protect with `CRON_SECRET` in production).
 
@@ -31,7 +32,7 @@ Create a [Vercel project](https://vercel.com/new), then in **Project → Setting
 | `TELEGRAM_CHAT_ID` | **Yes** (for Telegram) | Your chat ID (e.g. message [@userinfobot](https://t.me/userinfobot), it replies with your ID). |
 | `GOOGLE_SHEET_ID` | **Yes** (for Sheet) | From the sheet URL: `https://docs.google.com/spreadsheets/d/<GOOGLE_SHEET_ID>/edit`. |
 | `GOOGLE_SERVICE_ACCOUNT_JSON` | **Yes** (for Sheet) | JSON key for a Google Cloud service account with Sheets API enabled (see below). |
-| `OPENAI_API_KEY` | No | If set, uses OpenAI to summarize each article; otherwise uses the article description. |
+| `OPENAI_API_KEY` | **Yes** (for translation) | Used to translate title and summary to Mandarin. Also used for optional summarization. |
 | `CRON_SECRET` | Recommended | Any secret string. Vercel sends `Authorization: Bearer <CRON_SECRET>` when triggering the cron; your handler checks it. |
 
 #### Google Sheet setup
@@ -71,14 +72,7 @@ Cron uses **UTC**. Examples: `0 6 * * *` = 6:00 UTC; for 8:00 Singapore time (UT
 | Category | Limit | Source |
 |----------|-------|--------|
 | Top 20 news around the world | 20 | GNews top-headlines (world) |
-| Top 20 news in Singapore and SEA | 20 | GNews search (Singapore, Southeast Asia, ASEAN) |
-| Top 10 IT | 10 | GNews top-headlines (technology) |
-| Top 10 Finance & Economic | 10 | GNews top-headlines (business) |
-| Top 10 Politics | 10 | GNews search |
-| Top 10 Government Policy | 10 | GNews search |
-| Top 10 Energy | 10 | GNews search |
-| Top 10 Science | 10 | GNews top-headlines (science) |
-| Top 10 Rare Earth & commodities | 10 | GNews search (gold, silver, copper, palladium, etc.) |
+| Top 20 news in Asia and SEA | 20 | GNews search (Asia, Singapore, Southeast Asia, ASEAN) |
 
 ---
 

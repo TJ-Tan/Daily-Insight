@@ -7,6 +7,7 @@
 
 import { fetchAllCategories } from '../lib/news.js';
 import { summarizeCategoryArticles } from '../lib/summarize.js';
+import { translateArticlesToMandarin } from '../lib/translate.js';
 import { appendDailyNews } from '../lib/sheets.js';
 import { sendTelegramMessage, buildTelegramDigest } from '../lib/telegram.js';
 
@@ -50,7 +51,12 @@ export default async function handler(req, res) {
       cat.articles = await summarizeCategoryArticles(cat.articles, openaiKey);
     }
 
-    // 3) Append to Google Sheet by date
+    // 3) Translate to Mandarin (English kept; adds title_zh, summary_zh). Requires OPENAI_API_KEY.
+    for (const cat of categoryResults) {
+      cat.articles = await translateArticlesToMandarin(cat.articles, openaiKey);
+    }
+
+    // 4) Append to Google Sheet by date
     if (spreadsheetId && serviceAccountJson) {
       await appendDailyNews({
         spreadsheetId,
@@ -61,7 +67,7 @@ export default async function handler(req, res) {
       });
     }
 
-    // 4) Send digest via Telegram
+    // 5) Send digest via Telegram
     if (telegramToken && telegramChatId) {
       const digest = buildTelegramDigest(dateStr, categoryResults);
       await sendTelegramMessage(telegramToken, telegramChatId, digest);
