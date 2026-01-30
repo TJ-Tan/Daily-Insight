@@ -1,8 +1,7 @@
 /**
  * Vercel Cron: daily news digest.
- * Fetches news by category, optionally summarizes, appends to Google Sheet, sends via Telegram.
- * Triggered by cron (see vercel.json) or manually: GET /api/cron-daily-news
- * Secure with CRON_SECRET: Vercel sends Authorization: Bearer <CRON_SECRET>.
+ * Triggered by cron (see vercel.json) or manually with password.
+ * Auth: CRON_SECRET — use ?password=YOUR_PASSWORD in URL for testing, or Bearer token (cron).
  */
 
 import { fetchAllCategories } from '../lib/news.js';
@@ -10,6 +9,7 @@ import { summarizeCategoryArticles } from '../lib/summarize.js';
 import { translateArticlesToMandarin } from '../lib/translate.js';
 import { appendDailyNews } from '../lib/sheets.js';
 import { sendTelegramMessage, buildTelegramDigest } from '../lib/telegram.js';
+import { buildEndSummaryMandarin } from '../lib/endSummary.js';
 
 export const config = {
   maxDuration: 300,
@@ -20,12 +20,14 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const cronSecret = process.env.CRON_SECRET;
-  if (!cronSecret) {
+  const password = process.env.CRON_SECRET;
+  if (!password) {
     return res.status(503).json({ error: 'CRON_SECRET is not configured' });
   }
-  const auth = req.headers.authorization;
-  if (auth !== `Bearer ${cronSecret}`) {
+  const queryPass = req.query.password;
+  const bearerAuth = req.headers.authorization;
+  const authorized = queryPass === password || bearerAuth === `Bearer ${password}`;
+  if (!authorized) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
@@ -68,9 +70,11 @@ export default async function handler(req, res) {
       });
     }
 
-    // 5) Send digest via Telegram
+    // 5) Send digest via Telegram (with end summary in Mandarin)
     if (telegramToken && telegramChatId) {
-      const digest = buildTelegramDigest(dateStr, categoryResults);
+      let digest = buildTelegramDigest(dateStr, categoryResults);
+      const endSummary = await buildEndSummaryMandarin(categoryResults, openaiKey);
+      if (endSummary) digest += '\n\n' + endSummary;
       await sendTelegramMessage(telegramToken, telegramChatId, digest);
     }
 

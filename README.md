@@ -8,7 +8,7 @@ A Vercel-hosted workflow that **every day**:
 4. **Appends** rows to a **Google Sheet** by date (Date | Category | Title | Summary | Link | Source) so you can revisit later.
 5. **Sends** the full digest to you via **Telegram**.
 
-Cron runs **once per day** (default: 6:00 UTC; adjust in `vercel.json`). You can also trigger the job manually by calling `GET /api/cron-daily-news` (protect with `CRON_SECRET` in production).
+Cron runs **once per day** at 7:00 AM Singapore time. Trigger manually with **password**: open `https://YOUR_PROJECT.vercel.app/api/cron-daily-news?password=YOUR_CRON_SECRET` in the browser (or use the same password in the `Authorization: Bearer` header for cron).
 
 ---
 
@@ -33,7 +33,7 @@ Create a [Vercel project](https://vercel.com/new), then in **Project → Setting
 | `GOOGLE_SHEET_ID` | **Yes** (for Sheet) | From the sheet URL: `https://docs.google.com/spreadsheets/d/<GOOGLE_SHEET_ID>/edit`. |
 | `GOOGLE_SERVICE_ACCOUNT_JSON` | **Yes** (for Sheet) | JSON key for a Google Cloud service account with Sheets API enabled (see below). |
 | `OPENAI_API_KEY` | **Yes** (for translation) | Used to translate title and summary to Mandarin. Also used for optional summarization. |
-| `CRON_SECRET` | Recommended | Any secret string. Vercel sends `Authorization: Bearer <CRON_SECRET>` when triggering the cron; your handler checks it. |
+| `CRON_SECRET` | **Yes** | Your password. Use `?password=YOUR_CRON_SECRET` in the URL for manual runs; Vercel cron uses Bearer token. |
 
 #### Google Sheet setup
 
@@ -58,12 +58,12 @@ Cron runs only on **production** deployments. To run daily at a different time, 
 
 Cron uses **UTC**. Examples: `0 6 * * *` = 6:00 UTC; for 8:00 Singapore time (UTC+8) use `0 22 * * *` (previous day 22:00 UTC).
 
-### 4. Manual run
+### 4. Manual run (password-based)
 
-- **With CRON_SECRET:**  
-  `curl -H "Authorization: Bearer YOUR_CRON_SECRET" "https://YOUR_PROJECT.vercel.app/api/cron-daily-news"`
-- **Without CRON_SECRET:**  
-  `curl "https://YOUR_PROJECT.vercel.app/api/cron-daily-news"`
+- **In browser:**  
+  `https://YOUR_PROJECT.vercel.app/api/cron-daily-news?password=YOUR_CRON_SECRET`
+- **In terminal:**  
+  `curl "https://YOUR_PROJECT.vercel.app/api/cron-daily-news?password=YOUR_CRON_SECRET"`
 
 ---
 
